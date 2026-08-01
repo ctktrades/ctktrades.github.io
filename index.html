@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master the Markets — A Trading Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#0A1128;
+    --paper-2:#16244F;
+    --panel:#16244F;
+    --spine:#050A1A;
+    --spine-2:#0A1128;
+    --brass:#A9C2F0;
+    --rule: rgba(255,255,255,0.08);
+    --rule-strong: rgba(255,255,255,0.20);
+    --ink:#FFFFFF;
+    --ink-soft: rgba(255,255,255,0.65);
+    --bull:#FFFFFF;
+    --bull-soft: rgba(255,255,255,0.12);
+    --bear:#3E64B0;
+    --bear-soft: rgba(62,100,176,0.20);
+    --gold:#3B6FE0;
+    --gold-soft: rgba(59,111,224,0.18);
+    --grad: linear-gradient(120deg, #FFFFFF, #3B6FE0);
+    --glow: 0 0 0 1px rgba(59,111,224,0.40), 0 0 28px rgba(255,255,255,0.14);
+    --card-shadow: 0 14px 34px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      linear-gradient(var(--paper),var(--paper)),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 40px);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-top:64px;
+  }
+  h1,h2,h3,.display{ font-family:'Space Grotesk', sans-serif; letter-spacing:-0.01em; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  a{ color:inherit; }
+  em{ font-style:normal; color:var(--bear); font-weight:600; }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:fixed; top:0; left:0; right:0; height:64px; z-index:110;
+    background:var(--spine); color:var(--ink);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 5vw;
+    box-shadow:0 1px 0 rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .topbar .brand{ display:flex; align-items:center; gap:10px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.02rem; letter-spacing:-0.01em; }
+  .topbar .brand .mark{ width:22px; height:22px; flex:none; }
+  .topbar .brand i{ font-style:normal; color:var(--brass); }
+  .topbar nav{ display:flex; gap:28px; }
+  .topbar nav a{
+    font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.1em; text-transform:uppercase;
+    text-decoration:none; color:var(--ink-soft); position:relative; padding:4px 0;
+    transition:color .2s ease;
+  }
+  .topbar nav a:hover{ color:var(--brass); }
+  .topbar nav a::after{
+    content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:var(--brass);
+    transform:scaleX(0); transform-origin:left; transition:transform .2s ease;
+  }
+  .topbar nav a:hover::after{ transform:scaleX(1); }
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:88px 6vw 64px;
+    display:grid; grid-template-columns:1.05fr 1fr; gap:44px; align-items:center;
+  }
+  .stamp{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--spine); color:var(--brass);
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+    padding:7px 13px; border-radius:3px;
+    margin-bottom:24px;
+  }
+  .hero h1{
+    font-size:clamp(2.5rem, 5vw, 3.9rem); line-height:1.04; margin:0 0 16px; color:var(--ink);
+    font-weight:700;
+  }
+  .hero h1 i{ font-style:normal; color:var(--bull); }
+  .hero p.lead{
+    max-width:50ch; font-size:1.06rem; line-height:1.65; color:var(--ink-soft); margin:0 0 30px;
+  }
+  .hero p.lead b{ color:var(--ink); font-weight:700; }
+  .hero-ctas{ display:flex; gap:14px; flex-wrap:wrap; }
+  .btn{
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; letter-spacing:0.03em;
+    padding:14px 22px; border-radius:4px; border:1.5px solid var(--ink); cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; transition:all .2s ease; text-transform:uppercase;
+  }
+  .btn-primary{ background:var(--bull); border-color:var(--bull); color:var(--paper); }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(255,255,255,0.25); filter:brightness(1.06); }
+  .btn-ghost{ background:transparent; color:var(--ink); }
+  .btn-ghost:hover{ background:var(--ink); color:var(--panel); }
+
+  /* ---------- signature: candlestick chart ---------- */
+  .chart-card{
+    background:var(--panel); border:1.5px solid var(--rule-strong); border-radius:6px;
+    padding:20px 18px 12px; box-shadow:var(--card-shadow);
+  }
+  .chart-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+  .chart-head .mono{ font-size:11px; color:var(--ink-soft); letter-spacing:0.06em; }
+  .chart-head .mono.right{ color:var(--bull); font-weight:600; }
+  #candle-chart{ width:100%; height:auto; display:block; }
+  .chart-caption{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--ink-soft);
+    margin-top:6px; text-align:center;
+  }
+
+  /* ---------- sections ---------- */
+  section{ padding:60px 6vw; }
+  .section-head{ max-width:680px; margin:0 auto 40px; text-align:center; }
+  .section-head .tag{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--bull); margin-bottom:12px; display:block; font-weight:700;
+  }
+  .section-head h2{ font-size:clamp(1.7rem,3vw,2.25rem); margin:0 0 12px; color:var(--ink); font-weight:700; }
+  .section-head p{ color:var(--ink-soft); font-size:1rem; line-height:1.6; margin:0; }
+
+  /* ---------- why us ---------- */
+  .why{ max-width:1150px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  .why-item{
+    background:var(--panel); border:1px solid var(--rule-strong); border-radius:6px; padding:24px 20px;
+    box-shadow:var(--card-shadow); border-top:3px solid var(--bull); transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .why-item:nth-child(2){ border-top-color:var(--brass); }
+  .why-item:nth-child(3){ border-top-color:var(--bull); }
+  .why-item:nth-child(4){ border-top-color:var(--brass); }
+  .why-item:hover{ transform:translateY(-3px); box-shadow:var(--card-shadow), var(--glow); }
+  .why-item .n{ font-family:'JetBrains Mono',monospace; color:var(--bear); font-size:11px; margin-bottom:10px; display:block; }
+  .why-item h4{ margin:0 0 8px; font-size:1rem; color:var(--ink); font-weight:700; font-family:'Space Grotesk',sans-serif; }
+  .why-item p{ margin:0; font-size:0.87rem; color:var(--ink-soft); line-height:1.55; }
+
+  /* ---------- class details / mentor note ---------- */
+  .panels{ max-width:1150px; margin:0 auto; display:grid; grid-template-columns:1fr 1.15fr; gap:22px; }
+  .panel{ border-radius:6px; padding:30px 28px; }
+  .panel-ledger{ background:var(--panel); border:1px solid var(--rule-strong); box-shadow:var(--card-shadow); }
+  .panel-ledger h3{ color:var(--ink); font-size:1.12rem; margin:0 0 18px; font-weight:700; }
+  .panel-ledger .row{ display:flex; gap:12px; padding:11px 0; border-top:1px solid var(--rule); font-size:0.94rem; }
+  .panel-ledger .row:first-of-type{ border-top:none; }
+  .panel-ledger .row .star{ color:var(--bull); flex:none; width:20px; font-size:15px; font-weight:bold; }
+
+  .panel-note{
+    background:var(--spine); color:var(--ink);
+    border:1px solid var(--rule-strong); box-shadow:var(--card-shadow);
+    position:relative;
+  }
+  .panel-note::after{
+    content:"MENTOR'S NOTE"; position:absolute; top:18px; right:22px;
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.14em; color:rgba(248,250,252,0.3);
+  }
+  .panel-note h3{ font-size:1.3rem; margin:0 0 14px; color:var(--brass); font-weight:700; }
+  .panel-note p{ font-size:0.96rem; line-height:1.65; margin:0 0 18px; color:rgba(248,250,252,0.75); }
+  .panel-note .callout{
+    background:var(--gold-soft); border-left:3px solid var(--brass);
+    padding:14px 16px; font-size:0.9rem; display:flex; gap:10px; align-items:flex-start;
+  }
+
+  /* ---------- mentors ---------- */
+  .mentors{ max-width:1150px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  .mentor-card{
+    background:var(--panel); border:1px solid var(--rule-strong); border-radius:6px;
+    padding:26px 26px; box-shadow:var(--card-shadow); border-left:4px solid var(--gold);
+  }
+  .mentor-card .m-row{ display:flex; align-items:center; gap:12px; padding:9px 0; border-top:1px solid var(--rule); font-size:0.92rem; }
+  .mentor-card .m-row:first-of-type{ border-top:none; }
+  .mentor-card .m-row .m-icon{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--bull); width:74px; flex:none; text-transform:uppercase; letter-spacing:0.06em; font-weight:700; }
+  .mentor-card .m-row a{ color:var(--ink); text-decoration:none; }
+  .mentor-card .m-row a:hover{ color:var(--bear); text-decoration:underline; }
+
+  /* ---------- pricing ---------- */
+  .pricing{ max-width:1400px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:20px; align-items:stretch; }
+  .price-card{
+    background:var(--panel); border:1px solid var(--rule-strong); border-radius:6px;
+    padding:28px 26px; display:flex; flex-direction:column; box-shadow:var(--card-shadow); position:relative;
+  }
+  .price-card.featured{ border-color:var(--gold); }
+  .price-card.featured::before{
+    content:"LIMITED TIME OFFER"; position:absolute; top:-11px; left:26px;
+    background:var(--gold); color:#FFFFFF; font-family:'JetBrains Mono',monospace; font-size:10px;
+    letter-spacing:0.08em; padding:4px 10px; border-radius:20px; font-weight:700;
+  }
+  .price-card.soon{ border-color:var(--rule-strong); opacity:0.92; }
+  .price-card.soon::before{
+    content:"LAUNCHING SOON"; position:absolute; top:-11px; left:26px;
+    background:var(--bear); color:#FFFFFF; font-family:'JetBrains Mono',monospace; font-size:10px;
+    letter-spacing:0.08em; padding:4px 10px; border-radius:20px; font-weight:700;
+  }
+  .price-card .btn-disabled{
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; letter-spacing:0.03em;
+    padding:14px 22px; border-radius:4px; border:1.5px dashed var(--rule-strong); color:var(--ink-soft);
+    text-align:center; text-transform:uppercase; cursor:not-allowed; background:transparent;
+  }
+  .price-card .plabel{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em;
+    margin-bottom:10px; display:inline-block; padding:3px 8px; border-radius:3px; width:fit-content;
+    background:var(--bull-soft); color:var(--bull);
+  }
+  .price-card.featured .plabel{ background:var(--gold-soft); color:var(--brass); }
+  .price-card.soon .plabel{ background:var(--bear-soft); color:var(--bear); }
+  .price-card h3{ margin:0 0 4px; font-size:1.3rem; color:var(--ink); font-weight:700; }
+  .price-card .amount{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:2.2rem; color:var(--bull); margin:14px 0 4px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .price-card.featured .amount{ color:var(--bear); }
+  .price-card .amount sup{ font-size:1rem; font-weight:700; opacity:0.7; margin-right:2px; }
+  .price-card .amount .original{ font-family:'JetBrains Mono',monospace; font-size:1.05rem; font-weight:600; color:var(--ink-soft); text-decoration:line-through; opacity:0.6; }
+  .price-card .sub{ font-size:0.84rem; color:var(--ink-soft); margin-bottom:20px; border-bottom:1px dashed var(--rule-strong); padding-bottom:18px; }
+  .price-card ul{ list-style:none; padding:0; margin:0 0 24px; flex:1; }
+  .price-card li{ display:flex; gap:10px; padding:8px 0; font-size:0.9rem; color:var(--ink); }
+  .price-card li::before{ content:"▲"; color:var(--bull); font-weight:700; flex:none; font-size:9px; margin-top:5px; }
+  .price-card.featured li::before{ color:var(--bear); }
+
+  /* ---------- webinar ---------- */
+  .webinar{
+    max-width:1150px; margin:0 auto; background:var(--spine); color:var(--ink);
+    border-radius:8px; padding:32px 34px;
+    display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;
+  }
+  .webinar .badge{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.1em;
+    background:var(--gold); color:#FFFFFF; padding:4px 10px; border-radius:20px; text-transform:uppercase; font-weight:700;
+  }
+  .webinar h3{ margin:10px 0 4px; font-size:1.2rem; color:var(--ink); font-weight:700; }
+  .webinar p{ margin:0; color:rgba(248,250,252,0.7); font-size:0.92rem; }
+
+  /* ---------- registration ---------- */
+  .register{ background:var(--paper-2); padding:70px 6vw 90px; }
+
+  .registration-box{
+    max-width:460px; margin:0 auto; background:var(--panel); border:1px solid var(--rule-strong); border-radius:10px;
+    padding:35px; box-shadow:var(--card-shadow), var(--glow); position:relative;
+  }
+  .registration-box h2{
+    color:var(--bull); text-align:center; font-weight:700; margin:0 0 8px;
+    font-size:1.5rem; font-family:'Space Grotesk',sans-serif;
+  }
+  .registration-box.class-box h2{ color:var(--bear); }
+  .reg-sub{
+    text-align:center; color:var(--ink-soft); font-size:0.86rem; margin:0 0 24px; line-height:1.5;
+  }
+  .form-group{ margin-bottom:18px; }
+  .form-group label{
+    display:block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.05em;
+    text-transform:uppercase; color:var(--ink-soft); margin:0 0 7px; font-weight:600;
+  }
+  .form-control{
+    width:100%; background:var(--paper-2); border:1px solid var(--rule-strong); color:var(--ink);
+    font-family:'Inter',sans-serif; font-size:0.96rem; padding:11px 13px; border-radius:5px;
+    outline:none; transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .select-wrap{ position:relative; }
+  .select-wrap::after{
+    content:"▾"; position:absolute; right:14px; top:50%; transform:translateY(-50%);
+    color:var(--bull); font-size:13px; pointer-events:none;
+  }
+  .class-box .select-wrap::after{ color:var(--bear); }
+  select.form-control{
+    appearance:none; -webkit-appearance:none; -moz-appearance:none; cursor:pointer; padding-right:34px;
+  }
+  .form-control:focus{ border-color:var(--bull); box-shadow:0 0 0 3px var(--bull-soft); }
+  .class-box .form-control:focus{ border-color:var(--bear); box-shadow:0 0 0 3px var(--bear-soft); }
+  .registration-box .btn-warning{
+    width:100%; background:var(--bull); color:var(--paper); border:none;
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; letter-spacing:0.04em;
+    text-transform:uppercase; padding:15px; border-radius:5px; cursor:pointer; transition:.25s ease;
+  }
+  .registration-box .btn-warning:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(255,255,255,0.22); filter:brightness(1.05); }
+  .registration-box .btn-warning:disabled{ opacity:0.6; cursor:not-allowed; transform:none; box-shadow:none; }
+  .registration-box .btn-navy{
+    width:100%; background:var(--bear); color:#FFFFFF; border:none;
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; letter-spacing:0.04em;
+    text-transform:uppercase; padding:15px; border-radius:5px; cursor:pointer; transition:.25s ease;
+  }
+  .registration-box .btn-navy:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(62,100,176,0.35); filter:brightness(1.05); }
+  .registration-box .btn-navy:disabled{ opacity:0.6; cursor:not-allowed; transform:none; box-shadow:none; }
+  .error-msg{ color:var(--bear); font-size:0.8rem; margin-top:-10px; margin-bottom:14px; display:none; }
+
+  .success{ display:none; text-align:center; padding:20px 4px; }
+  .success .ticket{
+    background:var(--paper-2); border:1px dashed var(--gold); border-radius:5px; padding:26px; margin:22px 0;
+  }
+  .success .ticket .code{ font-family:'JetBrains Mono',monospace; color:var(--bear); font-size:1.35rem; letter-spacing:0.08em; }
+  .success h3{ font-size:1.5rem; margin:0 0 8px; color:var(--bull); font-family:'Space Grotesk',sans-serif; }
+  .success p{ color:var(--ink-soft); font-size:0.92rem; margin:0; }
+
+  /* ---------- scroll reveal ---------- */
+  .reveal{ opacity:0; transform:translateY(22px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.in-view{ opacity:1; transform:translateY(0); }
+
+  /* ---------- back to top ---------- */
+  .to-top{
+    position:fixed; right:24px; bottom:24px; width:44px; height:44px; border-radius:50%;
+    background:var(--spine); color:var(--brass); border:none; display:flex; align-items:center; justify-content:center;
+    font-size:16px; cursor:pointer; box-shadow:0 10px 24px rgba(0,0,0,0.4);
+    opacity:0; pointer-events:none; transform:translateY(12px); transition:opacity .25s ease, transform .25s ease;
+    z-index:90;
+  }
+  .to-top.visible{ opacity:1; pointer-events:auto; transform:translateY(0); }
+  .to-top:hover{ filter:brightness(1.3); }
+
+  footer{
+    background:var(--spine-2); color:var(--ink); border-top:1px solid var(--rule);
+    padding:28px 6vw; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;
+  }
+  footer .brand{ font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--ink); }
+  footer .brand i{ font-style:normal; color:var(--brass); }
+  footer p{ margin:0; font-size:0.78rem; color:rgba(248,250,252,0.5); max-width:480px; }
+
+  @media (max-width: 880px){
+    .topbar{ padding:0 4vw; }
+    .topbar nav{ gap:16px; }
+    .topbar nav a{ font-size:10px; }
+    .topbar{ height:52px; }
+    body{ padding-top:52px; }
+    .hero{ grid-template-columns:1fr; padding-top:36px; }
+    .why{ grid-template-columns:1fr 1fr; }
+    .panels{ grid-template-columns:1fr; }
+    .pricing{ grid-template-columns:1fr; max-width:520px; }
+    .mentors{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="13" width="3.4" height="8" fill="#FFFFFF"/>
+      <rect x="9.3" y="7" width="3.4" height="14" fill="#A9C2F0"/>
+      <rect x="15.6" y="3" width="3.4" height="18" fill="#3B6FE0"/>
+    </svg>
+    Master the <i>Markets</i>
+  </div>
+  <nav>
+    <a href="#curriculum">Curriculum</a>
+    <a href="#mentors">Mentors</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#register">Register</a>
+  </nav>
+</div>
+
+<section class="hero">
+  <div class="hero-copy">
+    <span class="stamp">● enrolling for 2026 batch</span>
+    <h1>Chart your course<br>through the <i>markets.</i></h1>
+    <p class="lead">
+      A complete, step-by-step path from your first Demat account to reading
+      <b>price action</b> like a professional — across stock market investing,
+      swing trading, price action, and forex. No options trading, no shortcuts —
+      just a simplified, logical route forward.
+    </p>
+    <div class="hero-ctas">
+      <a href="#register" class="btn btn-primary">Reserve your seat →</a>
+      <a href="#pricing" class="btn btn-ghost">See what's included</a>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-head">
+      <span class="mono">MODULES 01–07 · LIVE</span>
+      <span class="mono right">BEGINNER → ADVANCED</span>
+    </div>
+    <svg id="candle-chart" viewBox="0 0 520 300" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="chart-caption">each candle is a module — the trend only runs up</div>
+  </div>
+</section>
+
+<section class="reveal">
+  <div class="section-head">
+    <span class="tag">Why train here</span>
+    <h2>Built for people starting at zero</h2>
+  </div>
+  <div class="why">
+    <div class="why-item">
+      <h4>Beginner friendly</h4>
+      <p>Start from zero. We guide you step by step through every concept before moving on.</p>
+    </div>
+    <div class="why-item">
+      <h4>Practical learning</h4>
+      <p>Live charts, real examples, and case studies — not just slides and theory.</p>
+    </div>
+    <div class="why-item">
+      <h4>Easy to understand</h4>
+      <p>Simple language with clear explanations, built for first-time learners.</p>
+    </div>
+    <div class="why-item">
+      <h4>Support</h4>
+      <p>We're here for you at every step, well beyond the last class.</p>
+    </div>
+  </div>
+</section>
+
+<section id="curriculum" class="reveal">
+  <div class="panels">
+    <div class="panel panel-ledger">
+      <h3>Class details</h3>
+      <div class="row"><span class="star">▲</span><span>Weekly, 5 days a week (Mon – Fri)</span></div>
+      <div class="row"><span class="star">▲</span><span>Live interactive sessions</span></div>
+      <div class="row"><span class="star">▲</span><span>Practical chart analysis</span></div>
+      <div class="row"><span class="star">▲</span><span>Flexible timings</span></div>
+      <div class="row"><span class="star">▲</span><span>Beginner to advanced level</span></div>
+    </div>
+
+    <div class="panel panel-note">
+      <h3>About your guide</h3>
+      <p>Don't join this course expecting quick profits. Join to gain knowledge, develop trading discipline, and build the right mindset — with a guide who simplifies trading rather than complicating it.</p>
+      <div class="callout">
+        <span>⏱</span>
+        <span>Consistent profitability takes time and depends on your learning, practice, patience, and personal effort.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="mentors" class="reveal">
+  <div class="section-head">
+    <span class="tag">Your guides</span>
+    <h2>Meet the mentors behind the course</h2>
+    <p>Reach out directly on any of these channels with questions before you enroll.</p>
+  </div>
+  <div class="mentors">
+    <div class="mentor-card">
+      <div class="m-row"><span class="m-icon">Email</span><a href="mailto:tradeskavin@gmail.com">tradeskavin@gmail.com</a></div>
+      <div class="m-row"><span class="m-icon">Instagram</span><a href="https://instagram.com/Kavin_trades" target="_blank" rel="noopener">@Kavin_trades</a></div>
+      <div class="m-row"><span class="m-icon">Telegram</span><a href="https://t.me/Kavin_trades" target="_blank" rel="noopener">Kavin_trades</a></div>
+    </div>
+    <div class="mentor-card">
+      <div class="m-row"><span class="m-icon">Email</span><a href="mailto:ct.trades02@gamil.com">ct.trades02@gamil.com</a></div>
+      <div class="m-row"><span class="m-icon">Instagram</span><a href="https://instagram.com/ct.trades._" target="_blank" rel="noopener">@ct.trades._</a></div>
+      <div class="m-row"><span class="m-icon">Telegram</span><a href="https://t.me/CT_trades_fx" target="_blank" rel="noopener">CT_trades_fx</a></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" class="reveal">
+  <div class="section-head">
+    <span class="tag">Pricing</span>
+    <h2>Choose the path that fits you</h2>
+    <p>From foundational concepts to one-to-one mentorship — pick the level of guidance you need.</p>
+  </div>
+  <div class="pricing">
+    <div class="price-card">
+      <span class="plabel">Starter</span>
+      <h3>Trading Foundations</h3>
+      <div class="amount"><sup>₹</sup>2,500</div>
+      <div class="sub">One-time payment</div>
+      <ul>
+        <li>Chart Reading Basics</li>
+        <li>Support &amp; Resistance Essentials</li>
+        <li>Trend Identification</li>
+        <li>Risk Management</li>
+        <li>Beginner-friendly, live sessions</li>
+      </ul>
+      <a href="#class-register" class="btn btn-ghost" data-package="Trading Foundations — ₹2,500" style="justify-content:center;">Enroll Now →</a>
+    </div>
+
+    <div class="price-card featured">
+      <span class="plabel">Most popular</span>
+      <h3>Trader Growth Program</h3>
+      <div class="amount"><span class="original">₹12,500</span><sup>₹</sup>8,000</div>
+      <div class="sub">Limited Time Offer</div>
+      <ul>
+        <li>Risk-Refined Entries</li>
+        <li>Liquidity &amp; Stop Hunts</li>
+        <li>Order Block Precision</li>
+        <li>Market Structure Dynamics</li>
+        <li>Refined Entry &amp; Risk Control</li>
+      </ul>
+      <a href="#class-register" class="btn btn-primary" data-package="Trader Growth Program — ₹8,000 (was ₹12,500)" style="justify-content:center;">Enroll Now →</a>
+    </div>
+
+    <div class="price-card">
+      <span class="plabel">1-to-1</span>
+      <h3>Elite 1:1 Mentorship</h3>
+      <div class="amount"><sup>₹</sup>20,000</div>
+      <div class="sub">One-time payment</div>
+      <ul>
+        <li>All Trading Foundations + Growth Program content</li>
+        <li>Personal guidance</li>
+        <li>Safe space</li>
+        <li>Confidence building</li>
+        <li>Trading psychology coaching</li>
+      </ul>
+      <a href="#class-register" class="btn btn-ghost" data-package="Elite 1:1 Mentorship — ₹20,000" style="justify-content:center;">Enroll Now →</a>
+    </div>
+
+    <div class="price-card soon">
+      <span class="plabel">Institutional</span>
+      <h3>Advanced Trading Mastery</h3>
+      <div class="amount"><sup>₹</sup>25,000</div>
+      <div class="sub">Launching Soon</div>
+      <ul>
+        <li>Advanced Liquidity Mapping</li>
+        <li>Order Flow &amp; Market Microstructure</li>
+        <li>High-Probability Trade Models</li>
+        <li>Trader's Transformation Framework</li>
+        <li>Institutional-grade playbook</li>
+      </ul>
+      <span class="btn-disabled" style="text-align:center;">Launching Soon</span>
+    </div>
+  </div>
+</section>
+
+<section id="class-register" class="register reveal">
+  <div class="registration-box class-box">
+    <h2>Class Registration</h2>
+    <p class="reg-sub">Pick your package below — we'll confirm batch &amp; payment details after you submit.</p>
+
+    <form id="classRegForm">
+      <div class="form-group">
+        <label for="classPackage">Select Package</label>
+        <div class="select-wrap">
+          <select id="classPackage" class="form-control" required>
+            <option value="" disabled selected>Choose a package</option>
+            <option value="Trading Foundations — ₹2,500">Trading Foundations — ₹2,500</option>
+            <option value="Trader Growth Program — ₹8,000 (was ₹12,500)">Trader Growth Program — ₹8,000 (Limited Time)</option>
+            <option value="Elite 1:1 Mentorship — ₹20,000">Elite 1:1 Mentorship — ₹20,000</option>
+            <option value="Advanced Trading Mastery — ₹25,000" disabled>Advanced Trading Mastery — Launching Soon</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="className">Full Name</label>
+        <input type="text" id="className" class="form-control" required placeholder="As per your ID">
+      </div>
+      <div class="form-group">
+        <label for="classPhone">Phone Number</label>
+        <input type="tel" id="classPhone" class="form-control" required placeholder="+91 98765 43210">
+      </div>
+      <div class="form-group">
+        <label for="classEmail">Email Address</label>
+        <input type="email" id="classEmail" class="form-control" required placeholder="you@email.com">
+      </div>
+
+      <div class="error-msg" id="classErrorMsg">Please fill in all fields, including your package.</div>
+
+      <button type="submit" class="btn btn-navy w-100" id="classSubmitBtn">Enroll Now</button>
+    </form>
+
+    <div class="success" id="classSuccessPanel">
+      <h3>You're enrolled.</h3>
+      <p>We'll reach out on WhatsApp / email with payment &amp; batch details.</p>
+      <div class="ticket">
+        <div class="mono" style="font-size:11px; color:var(--ink-soft); margin-bottom:6px;">PACKAGE</div>
+        <div class="mono" id="classPackageSummary" style="font-size:0.95rem; color:var(--bull); margin-bottom:14px;">—</div>
+        <div class="mono" style="font-size:11px; color:var(--ink-soft); margin-bottom:6px;">ENROLLMENT CODE</div>
+        <div class="code" id="classConfCode">MTM-000000</div>
+      </div>
+      <p id="classSuccessSummary" style="font-size:0.85rem;"></p>
+    </div>
+  </div>
+</section>
+
+<section class="reveal">
+  <div class="webinar">
+    <div class="left">
+      <span class="badge">Free · 1 hour</span>
+      <h3>Free introductory webinar</h3>
+      <p>A live session before you commit to the full course.</p>
+    </div>
+    <a href="#register" class="btn btn-primary">Reserve your seat</a>
+  </div>
+</section>
+
+<section id="register" class="register reveal">
+  <div class="registration-box">
+    <h2>Free Webinar Registration</h2>
+
+    <form id="regForm">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" class="form-control" required placeholder="As per your ID">
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" class="form-control" required placeholder="+91 98765 43210">
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" class="form-control" required placeholder="you@email.com">
+      </div>
+
+      <div class="error-msg" id="errorMsg">Please fill in all fields.</div>
+
+      <button type="submit" class="btn btn-warning w-100" id="submitBtn">Register for FREE</button>
+    </form>
+
+    <div class="success" id="successPanel">
+      <h3>You're on the list.</h3>
+      <p>We'll reach out on WhatsApp / email with your batch timing.</p>
+      <div class="ticket">
+        <div class="mono" style="font-size:11px; color:var(--ink-soft); margin-bottom:6px;">CONFIRMATION CODE</div>
+        <div class="code" id="confCode">MTM-000000</div>
+      </div>
+      <p id="successSummary" style="font-size:0.85rem;"></p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="brand">Master the <i>Markets</i></div>
+  <p>Learn. Practice. Trade. Trading &amp; investing in financial markets is subject to market risks. Past performance is not a guarantee of future results.<br><br><strong>Disclaimer:</strong> Trading involves substantial risk and may not be suitable for everyone. All content is for educational purposes only. Our community is not SEBI registered and does not provide investment or financial advice.</p>
+</footer>
+
+<button class="to-top" id="toTop" aria-label="Back to top">↑</button>
+
+<script>
+  // ---- signature: animated candlestick chart, one candle per module, trending up ----
+  const svg = document.getElementById('candle-chart');
+  const modules = [
+    {label:'Basics',  close: 34, bull:true},
+    {label:'Charts',  close: 46, bull:false},
+    {label:'Levels',  close: 55, bull:true},
+    {label:'Risk',    close: 50, bull:false},
+    {label:'Price Action', close: 74, bull:true},
+    {label:'Forex',   close: 88, bull:true},
+    {label:'Mastery', close: 118, bull:true},
+  ];
+  const W = 520, H = 300, padL = 24, padR = 24, padB = 30, padT = 22;
+  const usableW = W - padL - padR;
+  const step = usableW / modules.length;
+  const baseline = H - padB;
+  const maxH = H - padT - padB;
+  const candleW = step * 0.42;
+
+  let markup = '';
+  // faint grid
+  for(let gy = padT; gy <= baseline; gy += (maxH/5)){
+    markup += `<line x1="${padL}" y1="${gy}" x2="${W-padR}" y2="${gy}" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>`;
+  }
+  markup += `<line x1="${padL}" y1="${baseline}" x2="${W-padR}" y2="${baseline}" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>`;
+
+  let prevClose = 12;
+  modules.forEach((m, i) => {
+    const cx = padL + step * i + step/2;
+    const bodyH = Math.max(10, (m.close/128) * (maxH-16));
+    const bodyTop = baseline - bodyH;
+    const wickTop = bodyTop - 10 - (i%2===0 ? 6 : 12);
+    const wickBot = baseline + (i%2===0 ? 6 : 3);
+    const color = m.bull ? '#FFFFFF' : '#3E64B0';
+
+    markup += `<g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="${i*0.16}s" dur="0.5s" fill="freeze"/>
+      <line x1="${cx}" y1="${wickTop}" x2="${cx}" y2="${wickBot}" stroke="${color}" stroke-width="1.6"/>
+      <rect x="${cx-candleW/2}" y="${bodyTop}" width="${candleW}" height="${bodyH}" fill="${color}" rx="1.5"/>
+      <text x="${cx}" y="${H-10}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8.5" fill="rgba(248,250,252,0.55)">${m.label}</text>
+      <text x="${cx}" y="${bodyTop-14}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="${color}">${i+1}</text>
+    </g>`;
+  });
+
+  svg.innerHTML = markup;
+
+  // =========================================================
+  // AUTOMATIC EMAIL SETUP (FormSubmit.co — no account/API key
+  // needed at all). Every registration is emailed straight to
+  // tradeskavin@gmail.com the moment someone submits a form.
+  //
+  // ONE-TIME STEP: the very first time each form is submitted,
+  // FormSubmit sends an activation email to tradeskavin@gmail.com
+  // asking to confirm you own that inbox. Click "Activate Form"
+  // in that email once, and every submission after that (from
+  // both forms) will land in the inbox automatically — nothing
+  // else to configure.
+  // =========================================================
+  const DESTINATION_EMAIL = "tradeskavin@gmail.com";
+  const FORMSUBMIT_ENDPOINT = `https://formsubmit.co/ajax/${DESTINATION_EMAIL}`;
+
+  // ---- reusable form submit handler ----
+  function setupRegistrationForm({ formId, errorId, submitId, panelId, codeId, summaryId, subjectPrefix, packageId, packageSummaryId }){
+    const form = document.getElementById(formId);
+    const errorMsg = document.getElementById(errorId);
+    const submitBtn = document.getElementById(submitId);
+    const originalLabel = submitBtn.textContent;
+    const packageSelect = packageId ? document.getElementById(packageId) : null;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const inputs = form.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"]');
+      const [name, phone, email] = Array.from(inputs).map(i => i.value.trim());
+      const pkg = packageSelect ? packageSelect.value : '';
+
+      if(!name || !phone || !email || (packageSelect && !pkg)){
+        errorMsg.style.display = 'block';
+        return;
+      }
+      errorMsg.style.display = 'none';
+
+      const code = 'MTM-' + Math.floor(100000 + Math.random()*900000);
+
+      const payload = {
+        _subject: pkg ? `${subjectPrefix}: ${name} — ${pkg}` : `${subjectPrefix}: ${name}`,
+        form_type: subjectPrefix,
+        package: pkg || 'N/A',
+        name, phone, email,
+        confirmation_code: code
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting…';
+
+      try {
+        await fetch(FORMSUBMIT_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.error('Auto-email failed:', err);
+      }
+
+      document.getElementById(codeId).textContent = code;
+      document.getElementById(summaryId).textContent = `${name}`;
+      if (packageSummaryId && pkg) {
+        document.getElementById(packageSummaryId).textContent = pkg;
+      }
+
+      form.style.display = 'none';
+      document.getElementById(panelId).style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalLabel;
+    });
+  }
+
+  setupRegistrationForm({
+    formId: 'regForm', errorId: 'errorMsg', submitId: 'submitBtn',
+    panelId: 'successPanel', codeId: 'confCode', summaryId: 'successSummary',
+    subjectPrefix: 'New webinar registration'
+  });
+
+  setupRegistrationForm({
+    formId: 'classRegForm', errorId: 'classErrorMsg', submitId: 'classSubmitBtn',
+    panelId: 'classSuccessPanel', codeId: 'classConfCode', summaryId: 'classSuccessSummary',
+    subjectPrefix: 'New class enrollment',
+    packageId: 'classPackage', packageSummaryId: 'classPackageSummary'
+  });
+
+  // ---- pre-select the matching package when an "Enroll Now" pricing link is clicked ----
+  document.querySelectorAll('.price-card a[data-package]').forEach(link => {
+    link.addEventListener('click', () => {
+      const select = document.getElementById('classPackage');
+      if (select) select.value = link.getAttribute('data-package');
+    });
+  });
+
+  // ---- scroll-reveal sections as they enter the viewport ----
+  const revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => revealObserver.observe(el));
+  } else {
+    revealEls.forEach(el => el.classList.add('in-view'));
+  }
+
+  // ---- back-to-top button ----
+  const toTopBtn = document.getElementById('toTop');
+  window.addEventListener('scroll', () => {
+    toTopBtn.classList.toggle('visible', window.scrollY > 600);
+  });
+  toTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+</script>
+
+</body>
+</html>
