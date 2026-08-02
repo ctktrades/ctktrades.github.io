@@ -789,6 +789,10 @@
   const DESTINATION_EMAIL = "tradeskavin@gmail.com";
   const FORMSUBMIT_ENDPOINT = `https://formsubmit.co/ajax/${DESTINATION_EMAIL}`;
 
+  // Google Sheet logging — every registration is also appended as a row
+  // in the connected Google Sheet via this Apps Script Web App.
+  const GOOGLE_SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbx1K-_aDJVCzZFcqGGVemCa9DPRqUaukn7666DXao83Qpe67zME4pei0hvgjtcWR_8wHA/exec";
+
   // ---- reusable form submit handler ----
   function setupRegistrationForm({ formId, errorId, submitId, panelId, codeId, summaryId, subjectPrefix, packageId, packageSummaryId }){
     const form = document.getElementById(formId);
@@ -830,6 +834,20 @@
         });
       } catch (err) {
         console.error('Auto-email failed:', err);
+      }
+
+      try {
+        // Apps Script Web Apps don't return CORS headers, so we fire this
+        // in no-cors mode — the row still gets written even though the
+        // response body isn't readable here.
+        await fetch(GOOGLE_SHEET_ENDPOINT, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ ...payload, timestamp: new Date().toISOString() })
+        });
+      } catch (err) {
+        console.error('Google Sheet logging failed:', err);
       }
 
       document.getElementById(codeId).textContent = code;
